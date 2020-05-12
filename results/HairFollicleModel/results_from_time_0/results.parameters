@@ -1,0 +1,76 @@
+<Chaste>
+
+	<OffLatticeSimulation-2-2>
+		<Dt>0.005</Dt>
+		<EndTime>15</EndTime>
+		<SamplingTimestepMultiple>150</SamplingTimestepMultiple>
+		<OutputDivisionLocations>0</OutputDivisionLocations>
+		<OutputCellVelocities>0</OutputCellVelocities>
+	</OffLatticeSimulation-2-2>
+
+	<NodeBasedCellPopulation-2>
+		<MechanicsCutOffLength>1.5</MechanicsCutOffLength>
+		<UseVariableRadii>0</UseVariableRadii>
+		<MeinekeDivisionSeparation>0.1</MeinekeDivisionSeparation>
+		<CentreBasedDivisionRule>
+			<RandomDirectionCentreBasedDivisionRule-2-2>
+			</RandomDirectionCentreBasedDivisionRule-2-2>
+		</CentreBasedDivisionRule>
+		<DampingConstantNormal>1</DampingConstantNormal>
+		<DampingConstantMutant>1</DampingConstantMutant>
+		<OutputResultsForChasteVisualizer>1</OutputResultsForChasteVisualizer>
+	</NodeBasedCellPopulation-2>
+
+	<CellCycleModels>
+		<NoCellCycleModel>
+		</NoCellCycleModel>
+		<UniformCellCycleModel>
+			<MinCellCycleDuration>12</MinCellCycleDuration>
+			<MaxCellCycleDuration>14</MaxCellCycleDuration>
+		</UniformCellCycleModel>
+	</CellCycleModels>
+
+	<SrnModels>
+		<NullSrnModel>
+		</NullSrnModel>
+	</SrnModels>
+
+	<CellKillers>
+	</CellKillers>
+
+	<SimulationModifiers>
+	</SimulationModifiers>
+
+	<Forces>
+		<GeneralisedLinearSpringForce-2-2>
+			<MeinekeSpringStiffness>30</MeinekeSpringStiffness>
+			<MeinekeDivisionRestingSpringLength>0.5</MeinekeDivisionRestingSpringLength>
+			<MeinekeSpringGrowthDuration>1</MeinekeSpringGrowthDuration>
+			<UseCutOffLength>1</UseCutOffLength>
+			<CutOffLength>1.5</CutOffLength>
+		</GeneralisedLinearSpringForce-2-2>
+		<HairFollicleMigrationForce-2>
+			<MigrationForceStrength>0.5</MigrationForceStrength> 
+		</HairFollicleMigrationForce-2>
+	</Forces>
+
+	<CellPopulationBoundaryConditions>
+		<HairFollicleGeometryBoundaryCondition-2>
+			<HairFollicleBaseScale>1</HairFollicleBaseScale>
+			<HairFollicleBaseRadius>4</HairFollicleBaseRadius>
+			<HairFollicleTopWidth>2.4</HairFollicleTopWidth>
+			<NicheBulgeRadius>2</NicheBulgeRadius>
+			<NicheBulgeCentre>-2.4,20</NicheBulgeCentre>
+			<MaxHeight>28.775</MaxHeight>
+		</HairFollicleGeometryBoundaryCondition-2>
+	</CellPopulationBoundaryConditions>
+
+	<NumericalMethod>
+		<ForwardEulerNumericalMethod-2-2>
+			<UseAdaptiveTimestep>0</UseAdaptiveTimestep> 
+			<UseUpdateNodeLocation>0</UseUpdateNodeLocation> 
+			<GhostNodeForcesEnabled>0</GhostNodeForcesEnabled> 
+		</ForwardEulerNumericalMethod-2-2>
+	</NumericalMethod>
+
+</Chaste>
