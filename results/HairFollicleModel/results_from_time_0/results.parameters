@@ -2,8 +2,8 @@
 
 	<OffLatticeSimulation-2-2>
 		<Dt>0.005</Dt>
-		<EndTime>15</EndTime>
-		<SamplingTimestepMultiple>150</SamplingTimestepMultiple>
+		<EndTime>50</EndTime>
+		<SamplingTimestepMultiple>1000</SamplingTimestepMultiple>
 		<OutputDivisionLocations>0</OutputDivisionLocations>
 		<OutputCellVelocities>0</OutputCellVelocities>
 	</OffLatticeSimulation-2-2>
@@ -39,19 +39,18 @@
 	</CellKillers>
 
 	<SimulationModifiers>
+		<HairFollicleDifferentiationTrackingModifier-2>
+		</HairFollicleDifferentiationTrackingModifier-2>
 	</SimulationModifiers>
 
 	<Forces>
-		<GeneralisedLinearSpringForce-2-2>
+		<RepulsionForce-2>
 			<MeinekeSpringStiffness>30</MeinekeSpringStiffness>
 			<MeinekeDivisionRestingSpringLength>0.5</MeinekeDivisionRestingSpringLength>
 			<MeinekeSpringGrowthDuration>1</MeinekeSpringGrowthDuration>
 			<UseCutOffLength>1</UseCutOffLength>
 			<CutOffLength>1.5</CutOffLength>
-		</GeneralisedLinearSpringForce-2-2>
-		<HairFollicleMigrationForce-2>
-			<MigrationForceStrength>0.5</MigrationForceStrength> 
-		</HairFollicleMigrationForce-2>
+		</RepulsionForce-2>
 	</Forces>
 
 	<CellPopulationBoundaryConditions>
@@ -59,9 +58,10 @@
 			<HairFollicleBaseScale>1</HairFollicleBaseScale>
 			<HairFollicleBaseRadius>4</HairFollicleBaseRadius>
 			<HairFollicleTopWidth>2.4</HairFollicleTopWidth>
-			<NicheBulgeRadius>2</NicheBulgeRadius>
+			<NicheBulgeRadius>1.75</NicheBulgeRadius>
 			<NicheBulgeCentre>-2.4,20</NicheBulgeCentre>
 			<MaxHeight>28.775</MaxHeight>
+			<TransitDifferentiationHeight>1.5</TransitDifferentiationHeight>
 		</HairFollicleGeometryBoundaryCondition-2>
 	</CellPopulationBoundaryConditions>
 

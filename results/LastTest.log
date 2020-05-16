@@ -1,0 +1,29 @@
+Start testing: May 14 20:57 PDT
+----------------------------------------------------------
+497/498 Testing: TestHairFollicleModel
+497/498 Test: TestHairFollicleModel
+Command: "/home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel"
+Directory: /media/sf_SimulationPackages/Chaste/
+"TestHairFollicleModel" start time: May 14 20:57 PDT
+Output:
+----------------------------------------------------------
+Running 1 test
+
+ ***** TestHairFollicleModel.hpp *****
+
+
+Entering TestHairFollicle
+Passed
+OK!
+<end of output>
+Test time = 796.02 sec
+----------------------------------------------------------
+Test Passed.
+"TestHairFollicleModel" end time: May 14 21:10 PDT
+"TestHairFollicleModel" time elapsed: 00:13:16
+----------------------------------------------------------
+
+End testing: May 14 21:10 PDT
+
+Continuous_project_HairFollicleModelling = 796.02 sec*proc
+

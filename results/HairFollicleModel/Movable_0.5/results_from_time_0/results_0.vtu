@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
+  <UnstructuredGrid>
+    <Piece NumberOfPoints="311"                  NumberOfCells="0"                   >
+      <PointData>
+        <DataArray type="Float64" Name="Cell types" format="appended" RangeMin="0"                    RangeMax="8"                    offset="0"                   />
+        <DataArray type="Float64" Name="Process rank" format="appended" RangeMin="0"                    RangeMax="0"                    offset="232"                 />
+      </PointData>
+      <CellData>
+      </CellData>
+      <Points>
+        <DataArray type="Float64" Name="Vertex positions" NumberOfComponents="3" format="appended" RangeMin="0.50385124998"        RangeMax="23.783642178"         offset="292"                 />
+      </Points>
+      <Cells>
+        <DataArray type="Int64" Name="connectivity" format="appended" RangeMin=""                     RangeMax=""                     offset="1620"                />
+        <DataArray type="Int64" Name="offsets" format="appended" RangeMin=""                     RangeMax=""                     offset="1636"                />
+        <DataArray type="UInt8" Name="types" format="appended" RangeMin=""                     RangeMax=""                     offset="1652"                />
+      </Cells>
+    </Piece>
+  </UnstructuredGrid>
+  <AppendedData encoding="base64">
+   _AQAAAACAAAC4CQAAmwAAAA==eJzNk7sRgDAMQ11mhBQU2QT2n4YROLikMWfkH4E0Khy/U4QgOk/ZLqHWtQBtgqI9tL8wRRx+X+LVrvv6zBtzxK1sPvYkPp9rffM9zpfm1jy0qs3FyrX6JqNae5LFlfri5fB70fd6/WT7kHLX9g19t1l5RH2g98zOw+sjK4+/9dTrA/3/b/fjdqL7gJfF+cyX0Ye3H/5+Hk9+dgA=AQAAAACAAAC4CQAAGQAAAA==eJztwQENAAAAwqD3T20ON6AAAHgwCbgAAQ==AQAAAACAAAAoHQAA0AMAAA==eJx1102IlVUcx/H/4ggnPeCZp2euVvTGhJShWY5Jq/8hGyhJmEXYLILBokUvBCEtkqAJrMgQCySoNiW9UYiFvUnkOQQ1EC0aMQsyOkSLEUoesvShRLuLhObM+d7d/fDlz29xX0X+/1iZFjwVkx46/ee+dc+1hfex7plc4Q64CXX36dhvJya2NSOFW3AB7yL0Ar1CH2APuAdv0sxXn8+NbVxWuAM34H2seyZXuANuAuwEb8DbtPXg2yuevsMU7sEtuIB3EXqBXqEPsAfcg7fggzQVxj775pO/40JvwB24Ae9j3TO5wh1wE2AneAM+AB++/8dP7r7i0InCPbgFF/AuQi/QK/QB9oB78BZ8kGZ2vf7Wl98d0IXegDtwAz783Kh6Jle4Az783KjvBG/AB+Btmrz/i1u/P/h74R7cggt4F6EX6BX6AHvAPXgLPkhnp3aPXvfR2UWvk7o7cAPex7pncoU74CbATvAGfADepnfi8dvW374kLHQPbsEFvIvQC/QKfYA94B68BW/S0SN/nJvb4Ap34Aa8j3XP5Ap3wE2AneAN+PD7YvvOez59caRwCy7gw++Lei/QK/QB9oB7cJf2PrHn0LN2tHAD3se6Z3KFO+Am1N2B+7T6mVcGdz+5snALLuBdhF6gV+gD7AH34C4d3vPm9lWnLyvcgPex7plc4Q64CXV34D7d9fL73/718JWFW3AB7yL0Ar1CH2APuAd36bG5n1765dGrCzfgfax7Jle4A25C3R24T7r1vonNa8YKt+AC3kXoBXqFPsAecA/u0tIf5099MH9N4Qa8j3XP5Ap3wE2ouwP36ej0I/sueWNV4RZcwLsIvUCv0AfYA+7BXXrt11OTT01fW7gB72PdM7nCHXAT6u7AfXrwgcfPz1+6unALLuBdhF6gV+gD7AH34C6Nnzy3f/LY9YUb8D7WPZMr3AE3oe4O/MLvsTWFW3ABv/B7bFEv0Cv0AfaAe3CXvj5z0bKrttxQuAHvY90zucIdcBPq7sB92nx49vimnesKt+AC3kXoBXqFPsAecA/u0oGZpR+e2XZj4Qa8j3XP5Ap3wE2ouwO3aXTTluff05sKF/AuQi/QK/Sh7hbcgzdpx5IX7p2+fH3hDtyA97HumVzhDrgJsBO8TT/PHrnl4n9K9+AWXMC7CL1Ar9AH2APuwZs0sWt0ZPaH8cIduAHvY90zucIdcBNgJ7hN7945Nb/j4w2FC3gXoRfoFfpQdwvuwU1avvzVuHbvzYX3se6ZXOEOuAl1d+D2v/9ZGwsX8C5CL9Ar9KHuFtwv8n8BSQOCkg==AAAAAACAAAAAAAAAAAAAAACAAAAAAAAAAAAAAACAAAAAAAAA
+  </AppendedData>
+</VTKFile>
+
+<!-- Created by Chaste version 2019.1.c4f5695 (with uncommitted modifications) on Fri, 15 May 2020 03:57:06 +0000.  Chaste was built on Mon, 02 Mar 2020 07:58:05 +0000 by machine (uname) 'Linux' using settings: Debug.  Checked-out project versions: AxelA=58358c550748fedf6088863782fdd77870262cc6; HairFollicleModelling=85b76bca4b2461b39ef95ad9a00cee5ee3eb3f70; MorphoCellBasedComparison=16de33a9744c65327e83bc3f0c912a1b99f2ee7d; WoundHealingModelling=e9b3397c3a9dab8bcb977dc5b528fcbd62575324.
+-->

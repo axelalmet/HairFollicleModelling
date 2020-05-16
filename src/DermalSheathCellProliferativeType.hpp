@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2005-2017, University of Oxford.
+Copyright (c) 2005-2020, University of Oxford.
 All rights reserved.
 
 University of Oxford means the Chancellor, Masters and Scholars of the
@@ -33,63 +33,42 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#ifndef DERMALSHEATHCELLPROLIFERATIVETYPE_HPP_
+#define DERMALSHEATHCELLPROLIFERATIVETYPE_HPP_
+
+#include "AbstractCellProliferativeType.hpp"
+#include "ChasteSerialization.hpp"
+#include <boost/serialization/base_object.hpp>
+
 /**
- * @file
- *
- * This file gives an example of how you can create your own executable
- * in a user project.
+ * Subclass of AbstractCellProliferativeType defining a dermal sheath cell.
  */
-
-#include <iostream>
-#include <string>
-
-#include "ExecutableSupport.hpp"
-#include "Exception.hpp"
-#include "PetscTools.hpp"
-#include "PetscException.hpp"
-
-#include "Hello.hpp"
-
-int main(int argc, char *argv[])
+class DermalSheathCellProliferativeType : public AbstractCellProliferativeType
 {
-    // This sets up PETSc and prints out copyright information, etc.
-    ExecutableSupport::StandardStartup(&argc, &argv);
-
-    int exit_code = ExecutableSupport::EXIT_OK;
-
-    // You should put all the main code within a try-catch, to ensure that
-    // you clean up PETSc before quitting.
-    try
+private:
+    /** Needed for serialization. */
+    friend class boost::serialization::access;
+    /**
+     * Archive the cell proliferative type.
+     *
+     * @param archive the archive
+     * @param version the current version of this class
+     */
+    template<class Archive>
+    void serialize(Archive & archive, const unsigned int version)
     {
-        if (argc<2)
-        {
-            ExecutableSupport::PrintError("Usage: ExampleApp arguments ...", true);
-            exit_code = ExecutableSupport::EXIT_BAD_ARGUMENTS;
-        }
-        else
-        {
-            for (int i=1; i<argc; i++)
-            {
-                if (PetscTools::AmMaster())
-                {
-                    std::string arg_i(argv[i]);
-                    Hello world(arg_i);
-                    std::cout << "Argument " << i << " is " << world.GetMessage() << std::endl << std::flush;
-                }
-            }
-        }
-    }
-    catch (const Exception& e)
-    {
-        ExecutableSupport::PrintError(e.GetMessage());
-        exit_code = ExecutableSupport::EXIT_ERROR;
+        archive & boost::serialization::base_object<AbstractCellProliferativeType>(*this);
     }
 
-    // Optional - write the machine info to file.
-    ExecutableSupport::WriteMachineInfoFile("machine_info");
+public:
+    /**
+     * Constructor.
+     */
+    DermalSheathCellProliferativeType();
+};
 
-    // End by finalizing PETSc, and returning a suitable exit code.
-    // 0 means 'no error'
-    ExecutableSupport::FinalizePetsc();
-    return exit_code;
-}
+#include "SerializationExportWrapper.hpp"
+// Declare identifier for the serializer
+CHASTE_CLASS_EXPORT(DermalSheathCellProliferativeType)
+
+#endif /*DermalSheathCellPROLIFERATIVETYPE_HPP_*/

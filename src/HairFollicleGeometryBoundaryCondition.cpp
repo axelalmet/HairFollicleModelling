@@ -8,6 +8,7 @@
 #include "TransitCellProliferativeType.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 #include "FibroblastCellProliferativeType.hpp"
+#include "DermalSheathCellProliferativeType.hpp"
 #include "Debug.hpp"
 
 /* Boundary condition that imposes HF geometry shape.
@@ -19,14 +20,16 @@ HairFollicleGeometryBoundaryCondition<DIM>::HairFollicleGeometryBoundaryConditio
         double hairFollicleTopWidth,
         double nicheBulgeRadius,
         c_vector<double, DIM> nicheBulgeCentre,
-        double maxHeight)
+        double maxHeight,
+        double transitDifferentiationHeight)
 		: AbstractCellPopulationBoundaryCondition<DIM>(pCellPopulation),
 		  mHairFollicleBaseScale(hairFollicleBaseScale),
           mHairFollicleBaseRadius(hairFollicleBaseRadius),
           mHairFollicleTopWidth(hairFollicleTopWidth),
           mNicheBulgeRadius(nicheBulgeRadius),
           mNicheBulgeCentre(nicheBulgeCentre),
-          mMaxHeight(maxHeight)
+          mMaxHeight(maxHeight),
+          mTransitDifferentiationHeight(transitDifferentiationHeight)
 		  {
 		  }
 
@@ -67,6 +70,12 @@ double HairFollicleGeometryBoundaryCondition<DIM>::rGetMaxHeight() const
 }
 
 template<unsigned DIM>
+double HairFollicleGeometryBoundaryCondition<DIM>::rGetTransitDifferentiationHeight() const
+{
+	return mTransitDifferentiationHeight;
+}
+
+template<unsigned DIM>
 void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const std::map<Node<DIM>*, c_vector<double, DIM> >& rOldLocations)
 {
 	///\todo Move this to constructor. If this is in the constructor then Exception always throws.
@@ -94,40 +103,150 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
             double x = current_location[0];
             double y = current_location[1];
 
+            /* 
+             * I think it's easier to do this based on cell type, because the HF population
+             * structure is so hierarchical. What that means is:
+             * Stem cells: confined to semi-circular bulge defined by its centre and radius that sits
+             *              outside of HF, but when in HF, they sit within a horizontal strip defined 
+             *              by the radius.
+             * Movable/non-movable progeny:
+             *              Confined to two vertical strips about width of HF and annulus that 
+             *              defines the circular HF base. NB Movable progeny should only be in region x < 0.
+             * Dermal papilla fibroblasts: 
+             *              Confined to lower region of HF base, that is defined by the circular HF base
+             *              and a reflected parabola.
+             * Dermal sheath fibroblasts:
+             *              Line the entire hair follicle, sit below the niche bulge and line up with the DP.
+             * Matrix TA cells:
+             *              Confined within HF base but above the parabolic region where the DP cells sit.
+             * 
+             * Differentiated cells: 
+             *              Sit above TA cells and confined within the vertical boundaries imposed by the
+             *              SC progeny.
+             */
+
             // If we look at stem cells, we judge them a little bit differently
             if (cell_iter->GetCellProliferativeType()->template IsType<StemCellProliferativeType>())
             {
                 c_vector<double, DIM> nearest_point = current_location;
 
-                if (x < -mHairFollicleTopWidth + 1.0)
-                {                    // Confine stem cells to the bulge niche
+                if (x < mNicheBulgeCentre[0])
+                {                    
+                    // Confine stem cells to the bulge niche
                     if (norm_2(current_location - mNicheBulgeCentre) > mNicheBulgeRadius)
                     {
                         nearest_point[0] = mNicheBulgeCentre[0] + (x - mNicheBulgeCentre[0]) * mNicheBulgeRadius / norm_2(current_location - mNicheBulgeCentre);
                         nearest_point[1] = mNicheBulgeCentre[1] + (y - mNicheBulgeCentre[1]) * mNicheBulgeRadius / norm_2(current_location - mNicheBulgeCentre);
                     }
                 }
-                else if (x > -mHairFollicleTopWidth + 1.0)
-                {
-                    nearest_point[0] = -mHairFollicleTopWidth + 1.0;
-                }
                 else
                 {
+                    if (x > -mHairFollicleTopWidth + 1.0)
+                    {
+                        nearest_point[0] = -mHairFollicleTopWidth + 1.0;
+                    }
+
                     if (y > mNicheBulgeCentre[1] + mNicheBulgeRadius)
                     {
-                        if (norm_2(current_location - mNicheBulgeCentre) > mNicheBulgeRadius)
+                        nearest_point[1] = mNicheBulgeCentre[1] + mNicheBulgeRadius;
+                    }
+                    
+                }
+                
+                // Set the new location
+                p_node->rGetModifiableLocation() = nearest_point;
+            }
+            else if  ( (cell_iter->GetCellProliferativeType()->template IsType<MovableStemCellProgenyProliferativeType>())||
+                        (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>()) )
+            {
+                c_vector<double, DIM> nearest_point = current_location;
+
+                // If we are above the circle that defines the HF base.
+                if (y >=  pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5) - 0.5)
+                {
+                    // Make sure that the cells are confined within the vertical strip along the HF
+                    if (x < 0.0)
+                    {
+                        if (x < -mHairFollicleTopWidth)
                         {
-                            nearest_point[0] = mNicheBulgeCentre[0] + (x - mNicheBulgeCentre[0]) * mNicheBulgeRadius / norm_2(current_location - mNicheBulgeCentre);
-                            nearest_point[1] = mNicheBulgeCentre[1] + (y - mNicheBulgeCentre[1]) * mNicheBulgeRadius / norm_2(current_location - mNicheBulgeCentre);
+                            nearest_point[0] = -mHairFollicleTopWidth;
+                        }
+                        else if (x > -mHairFollicleTopWidth + 1.0)
+                        {
+                            nearest_point[0] = -mHairFollicleTopWidth + 1.0;
+                        }
+
+                        if (y > mNicheBulgeCentre[1]) // We need to make sure progeny stay outside of the bulge.
+                        {
+                            if ( y < mNicheBulgeCentre[1] + mNicheBulgeRadius)
+                            {
+                                nearest_point[1] = mNicheBulgeCentre[1] + mNicheBulgeRadius;
+                            }
+                        }
+                        else
+                        {
+                            if ( y > mNicheBulgeCentre[1] - mNicheBulgeRadius)
+                            {
+                                nearest_point[1] = mNicheBulgeCentre[1] - mNicheBulgeRadius;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (x > mHairFollicleTopWidth)
+                        {
+                            nearest_point[0] = mHairFollicleTopWidth;
+                        }
+                        else if (x < mHairFollicleTopWidth - 1.0)
+                        {
+                            nearest_point[0] = mHairFollicleTopWidth - 1.0;
+                        }
+
+                    }
+                    if (y > mMaxHeight) // Impose a hard barrier on the progeny (not on diff cells, because we want hair to shoot out)
+                    {
+                        nearest_point[1] = mMaxHeight;
+                    }
+                }
+                else // If we are in the HF base
+                {   
+
+                    if ( (x < -sqrt(fabs(y)/mHairFollicleBaseScale))||(x > sqrt(fabs(y)/mHairFollicleBaseScale) ) )
+                    {
+
+                        // We allow movable progeny to leave the outer lay to enter the TA region
+                        if (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>())
+                        {
+                            if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
+                            {
+                                nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
+                                nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                            }
+                            else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.25, 2.0) )
+                            {
+                                nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                                nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                            }
+                        }
+                        else
+                        {
+                            if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
+                            {
+                                nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
+                                nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        if (y < - mHairFollicleBaseScale * x * x)
+                        {
+                            nearest_point[1] = - mHairFollicleBaseScale * x * x;
                         }
                     }
                 }
 
-                if (y > mMaxHeight)
-                {
-                    nearest_point[1] = mMaxHeight;
-                }
-                
                 // Set the new location
                 p_node->rGetModifiableLocation() = nearest_point;
             }
@@ -137,10 +256,10 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
             {
                 c_vector<double, DIM> nearest_point = current_location;
 
-                if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0)) // If cell has gone too far below and falls outside of the disc.
+                if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius + 0.5, 2.0)) // If cell has gone too far below and falls outside of the disc.
                 {
-                    nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
-                    nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                    nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5)/ norm_2(current_location);
+                    nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5)/ norm_2(current_location);
                 }
 
                 // Cell can't be too high or too wide
@@ -152,150 +271,124 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                 // Set the new location
                 p_node->rGetModifiableLocation() = nearest_point;
             }
-            else
+            // Dermal sheaths line the HF 
+            else if (cell_iter->GetCellProliferativeType()->template IsType<DermalSheathCellProliferativeType>())
             {
                 c_vector<double, DIM> nearest_point = current_location;
 
-                if (y < 0.0)
+                if (y >= pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5))
                 {
-
-                    // Confine stem cell progeny to the annulus at the base as well.
-                    if ( (cell_iter->GetCellProliferativeType()->template IsType<MovableStemCellProgenyProliferativeType>())||
-                        (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>()) )
+                    if ( (x < 0.0)&&(y > mNicheBulgeCentre[1] - mNicheBulgeRadius) )
                     {
-                        if ( (x < -sqrt(fabs(y)/mHairFollicleBaseScale))||(x > sqrt(fabs(y)/mHairFollicleBaseScale) ) )
-                        {
-                            if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.5, 2.0))
-                            {
-                                nearest_point[0] = x * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                                nearest_point[1] = y * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                            }
-                            else if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
-                            {
-                                nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
-                                nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
-                            }
-                        } 
+                        nearest_point[1] = mNicheBulgeCentre[1] - mNicheBulgeRadius;
                     }
 
-
-                    // Contrastingly, we have to make sure differentiated cells don't go out either
-                    // For stem cell progencies, they can't go too far inwards either
-
-                    if ( (cell_iter->GetCellProliferativeType()->template IsType<DifferentiatedCellProliferativeType>())
-                        || (cell_iter->GetCellProliferativeType()->template IsType<TransitCellProliferativeType>()))
+                    if (x < -mHairFollicleTopWidth - 0.5)
                     {
-                        if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius - 1.5, 2.0))
+                        nearest_point[0] = -mHairFollicleTopWidth - 0.5;
+
+                        if (y > mNicheBulgeCentre[1] - mNicheBulgeRadius)
                         {
-                            nearest_point[0] = x * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                            nearest_point[1] = y * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
+                            nearest_point[1] = mNicheBulgeCentre[1] - mNicheBulgeRadius;
                         }
                     }
-
-                    // If the cell has gone past the base in the middle, where there's a protrusion
-                    if ( (y < -mHairFollicleBaseScale * x * x )&&(x>= -sqrt(fabs(y)/mHairFollicleBaseScale))&&(x <= sqrt(fabs(y)/mHairFollicleBaseScale)) ) //If we have moved past the 
+                    else if (x > mHairFollicleTopWidth + 0.5)
                     {
-                        nearest_point[1] = -mHairFollicleBaseScale * x * x;
-
+                        nearest_point[0] = mHairFollicleTopWidth + 0.5;
                     }
 
-                    // Set the new location
-                    p_node->rGetModifiableLocation() = nearest_point;
-
+                    if ( (x > 0.0)&&(y > mMaxHeight) )
+                    {
+                        nearest_point[1] = mMaxHeight;
+                    }
                 }
                 else
                 {
-                    if (y > pow(pow(mHairFollicleBaseRadius - 1.5, 2.0) - pow(mHairFollicleTopWidth - 1.0, 2.0), 0.5) )
+
+                    if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius + 0.5, 2.0))
                     {
-                        // Make sure cell doesn't fall outside of hair follicle boundaries at the top
-                        if ( (x < - mHairFollicleTopWidth)||(x > mHairFollicleTopWidth) )
-                        {
-                                if (x < 0.0)
-                                {
-                                    nearest_point[0] = -mHairFollicleTopWidth;
-                                }
-                                else
-                                {
-                                    nearest_point[0] = mHairFollicleTopWidth;
-                                }
-                                
-                        }
-
-                        // For stem cell progencies, they can't go too far inwards either
-                        if ( (cell_iter->GetCellProliferativeType()->template IsType<MovableStemCellProgenyProliferativeType>())||
-                        (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>()) )
-                        {
-                            if ( (x < 0.0)&&(x > -mHairFollicleTopWidth + 1.0) )
-                            {
-                                nearest_point[0] = -mHairFollicleTopWidth + 1.0;
-                            }
-                            else if ( (x > 0.0)&&(x < mHairFollicleTopWidth - 1.0) )
-                            {
-                                nearest_point[0] = mHairFollicleTopWidth - 1.0;
-
-                            }
-                            if (y > mMaxHeight) // Impose a hard barrier on the progeny (not on diff cells, because we want hair to shoot out)
-                            {
-                                nearest_point[1] = mMaxHeight;
-                            }
-                        }
-                        if ( (cell_iter->GetCellProliferativeType()->template IsType<DifferentiatedCellProliferativeType>())
-                         || (cell_iter->GetCellProliferativeType()->template IsType<TransitCellProliferativeType>()))
-                        {
-                            if (x < -mHairFollicleTopWidth + 1.0)
-                            {
-                                nearest_point[0] = -mHairFollicleTopWidth + 1.0;
-                            }
-                            else if (x > mHairFollicleTopWidth - 1.0)
-                            {
-                                nearest_point[0] = mHairFollicleTopWidth - 1.0;
-                            }
-                        }
-
-                        // Set the new location
-                        p_node->rGetModifiableLocation() = nearest_point;
+                        nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
                     }
-                    else
-                    {  
-                        // This keeps relevant cells within the upper half-annulus that connects to the tip of the HF
-                        if ( (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))&&
-                            ((x < -mHairFollicleTopWidth + 1.0)||(x > mHairFollicleTopWidth - 1.0)) )
+                    else if (pow(x, 2.0) + pow(y, 2.0) <= pow(mHairFollicleBaseRadius, 2.0))
+                    {
+                        nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                    }
+
+                    if (y < 0.0)
+                    {
+                        if ( (x < 0.0)&&(x >= -pow(fabs(y)/mHairFollicleBaseScale, 0.5)) ) 
                         {
-                            nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
-                            nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                            nearest_point[0] = -pow(fabs(y)/mHairFollicleBaseScale, 0.5);
                         }
-
-                        // For stem cell progencies, they can't go too far inwards either
-                        if ( (cell_iter->GetCellProliferativeType()->template IsType<MovableStemCellProgenyProliferativeType>())||
-                        (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>()) )
+                        else if ( (x > 0.0)&&(x <= pow(fabs(y)/mHairFollicleBaseScale, 0.5)) )
                         {
-                            if ((pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.5, 2.0))&&
-                                ((x < -mHairFollicleTopWidth + 1.0)||(x > mHairFollicleTopWidth - 1.0)) )
-                            {
-                                nearest_point[0] = x * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                                nearest_point[1] = y * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                            }
+                            nearest_point[0] = pow(fabs(y)/mHairFollicleBaseScale, 0.5);
                         }
-
-                        // Contrastingly, we have to make sure differentiated cells don't go out either
-                        // For stem cell progencies, they can't go too far inwards either
-
-                        if ( (cell_iter->GetCellProliferativeType()->template IsType<DifferentiatedCellProliferativeType>())
-                         || (cell_iter->GetCellProliferativeType()->template IsType<TransitCellProliferativeType>()))
-                        {
-                            if ( (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius - 1.5, 2.0))&&
-                             ((x <= -mHairFollicleTopWidth + 1.0)||(x >= mHairFollicleTopWidth - 1.0)) )
-                            {
-                                nearest_point[0] = x * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                                nearest_point[1] = y * (mHairFollicleBaseRadius - 1.5) / norm_2(current_location);
-                            }
-                        }
-
-                        // Set the new location
-                        p_node->rGetModifiableLocation() = nearest_point;
-
+                        
                     }
                 }
+
+                // Set the new location
+                p_node->rGetModifiableLocation() = nearest_point;
+            }
+            else // Should be a differentiated and/or TA cells
+            {
+                c_vector<double, DIM> nearest_point = current_location;
+
+                if (y >= pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5))
+                {
+        
+                    if ( (x < 0.0)&&(x < -mHairFollicleTopWidth + 1.0) )
+                    {
+                        nearest_point[0] = -mHairFollicleTopWidth + 1.0;
+                    }
+                    else if ( (x > 0.0)&&(x > mHairFollicleTopWidth - 1.0))
+                    {
+                        nearest_point[0] = mHairFollicleTopWidth - 1.0;
+                    }
+                }
+                // If we are below the HF outer root sheath, within the base, we should make sure the TA/diff cells
+                // don't mix with the stem cell progeny.
+                else if ( (y >= 0.0)&&(y <= pow(pow(mHairFollicleBaseRadius - 1.5, 2.0) - pow(mHairFollicleTopWidth - 1.0, 2.0), 0.5)) )
+                {
+                    if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius - 1.25, 2.0))
+                    {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                    }
+
+                    if (cell_iter->GetCellProliferativeType()->template IsType<DifferentiatedCellProliferativeType>())
+                    {
+                        if (y < mTransitDifferentiationHeight)
+                        {
+                            nearest_point[1] = mTransitDifferentiationHeight;
+                        }
+                    }
+                }
+                else // Cells should be in lower half of base
+                {
+                    // Confine cells so that they're not outside of the base.
+                    if ( (x < -sqrt(fabs(y)/mHairFollicleBaseScale))||(x > sqrt(fabs(y)/mHairFollicleBaseScale) ) )
+                    {
+                        if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius - 1.25, 2.0))
+                        {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                        }
+                    } 
+                    else // Make sure they don't enter DP region as well
+                    {
+                        if (y < -mHairFollicleBaseScale * x * x)
+                        {
+                            nearest_point[1] = -mHairFollicleBaseScale * x * x;
+                        }
+                    }
+                }
+
+                // Set the new location
+                p_node->rGetModifiableLocation() = nearest_point;  
             }
         }
     }
@@ -386,6 +479,7 @@ void HairFollicleGeometryBoundaryCondition<DIM>::OutputCellPopulationBoundaryCon
 	*rParamsFile << mNicheBulgeCentre[DIM - 1] << "</NicheBulgeCentre>\n";
 
     *rParamsFile << "\t\t\t<MaxHeight>" << mMaxHeight << "</MaxHeight>\n";
+    *rParamsFile << "\t\t\t<TransitDifferentiationHeight>" << mTransitDifferentiationHeight << "</TransitDifferentiationHeight>\n";
 
 	// Call method on direct parent class
 	AbstractCellPopulationBoundaryCondition<DIM>::OutputCellPopulationBoundaryConditionParameters(rParamsFile);

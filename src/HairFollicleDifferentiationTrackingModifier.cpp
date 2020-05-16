@@ -170,7 +170,7 @@ void HairFollicleDifferentiationTrackingModifier<DIM>::UpdateCellData(AbstractCe
         {          
             if (current_location[0] >= mNicheBulgeCentre[0]) // Only celsl that are within the hair follicle should differentiate
             {
-                if (norm_2(current_location - mNicheBulgeCentre) > mNicheBulgeRadius) // If the cell has fallen outside of the bulge, it will differentiate
+                if (current_location[1] <  mNicheBulgeCentre[1] - mNicheBulgeRadius) // If the cell has fallen outside of the bulge, it will differentiate
                 {
                     double progeny_fate = RandomNumberGenerator::Instance()->ranf();
 
