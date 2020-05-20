@@ -26,6 +26,7 @@
 #include "DifferentiatedCellProliferativeType.hpp" // HF differentiated cells
 #include "FibroblastCellProliferativeType.hpp" // Fibroblasts to represent the dermal papillae
 #include "DermalSheathCellProliferativeType.hpp" // Fibroblasts to represent the dermal papillae
+#include "CellLabel.hpp" // Add a cell label to tag certain cells
 #include "WildTypeCellMutationState.hpp" // Epidermal mutation state
 #include "HairFollicleDifferentiationTrackingModifier.hpp"
 #include "HairFollicleGeometryBoundaryCondition.hpp" // Boundary to maintain the geometry of the HF.
@@ -36,7 +37,7 @@
 
 static const std::string M_OUTPUT_DIRECTORY = "HairFollicleModel";
 static const double M_DT = 0.005;
-static const double M_END_TIME = 100.0;
+static const double M_END_TIME = 150.0;
 static const double M_SAMPLING_TIMESTEP = 10.0/M_DT;
 
 /*
@@ -59,7 +60,7 @@ public:
         double hf_top_width = 3.0;
 
         // Parameters that determine where the stem cell bulge is 
-        double niche_bulge_radius = 1.8; // Size of the stem cell bulge.
+        double niche_bulge_radius = 1.75; // Size of the stem cell bulge.
         c_vector<double, 2> niche_bulge_centre;
         niche_bulge_centre[0] = -0.8*hf_top_width - 1.0;
         niche_bulge_centre[1] = 20.0;
@@ -76,7 +77,7 @@ public:
         double movable_progeny_probability = 0.5;
 
         // Set the height at which we impose TA differentiation
-        double transit_differentiation_height = -100.0;
+        // double transit_differentiation_height = -100.0;
 
         HoneycombMeshGenerator generator(cells_across, cells_up, 0); //Create mesh
         MutableMesh<2, 2>* p_generating_mesh = generator.GetMesh(); //Generate mesh
@@ -166,15 +167,16 @@ public:
         boost::shared_ptr<AbstractCellProperty> p_dp_type(CellPropertyRegistry::Instance()->Get<FibroblastCellProliferativeType>());
         boost::shared_ptr<AbstractCellProperty> p_ds_type(CellPropertyRegistry::Instance()->Get<DermalSheathCellProliferativeType>());
         boost::shared_ptr<AbstractCellProperty> p_wildtype_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
+        boost::shared_ptr<AbstractCellProperty> p_cell_label(CellPropertyRegistry::Instance()->Get<CellLabel>());
 
         std::vector<CellPtr> cells; //Create vector of cells
 
         for (unsigned i = 0; i < p_mesh->GetNumNodes(); i++) // Iterator for periodic mesh
         {
-            double birth_time = - 5.0 * RandomNumberGenerator::Instance()->ranf();
+            double birth_time = -20.0 * RandomNumberGenerator::Instance()->ranf();
 
             HairFollicleUniformG1GenerationalCellCycleModel* p_cycle_model = new HairFollicleUniformG1GenerationalCellCycleModel(); //Contact-inhibition-based cycle model yet.
-            p_cycle_model->SetMaxTransitGenerations(2);
+            p_cycle_model->SetMaxTransitGenerations(3);
             p_cycle_model->SetStemCellG1Duration(38.0);
             p_cycle_model->SetTransitCellG1Duration(26.0);
             p_cycle_model->SetDimension(2);
@@ -227,6 +229,13 @@ public:
                             &&(y >= niche_bulge_centre[1] - niche_bulge_radius)&&(y <= niche_bulge_centre[1] + niche_bulge_radius) )
                     {
                         cell_iter->SetCellProliferativeType(p_stem_type);
+
+                        // Try and tag one cell
+                        if ( (y < niche_bulge_centre[1] - niche_bulge_radius + 1.25)&&(x > -hf_top_width + 0.5)&&(x < -hf_top_width + 1.75) )
+                        {
+                            cell_iter->AddCellProperty(p_cell_label);
+                        }
+
                     }
 
                     if ((x > -hf_top_width + 1.6)&&(x < hf_top_width - 1.6))
@@ -245,48 +254,47 @@ public:
                 }
                 else
                 {
-                    if (pow(x, 2.0) + pow(y, 2.0) < pow(hf_base_radius - 1.6, 2.0))
-                    {
-                        if ((y <= 1.5)&&(y > -hf_base_scale * x * x))
+                        if ( (y <= 1.0)&&(y > -hf_base_scale * x * x) )
                         {
-                            cell_iter->SetCellProliferativeType(p_transit_type);
+                            if (pow(x, 2.0) + pow(y, 2.0) < pow(hf_base_radius - 1.5, 2.0) )
+                            {
+                                    cell_iter->SetCellProliferativeType(p_transit_type);
+                            }
                         }
                         else
                         {
-                            cell_iter->SetCellProliferativeType(p_diff_type);
+                            if (pow(x, 2.0) + pow(y, 2.0) < pow(hf_base_radius - 1.5, 2.0) )
+                            {
+                                cell_iter->SetCellProliferativeType(p_diff_type);
+                            }
                         }
-                    }
 
                     if (pow(x, 2.0) + pow(y, 2.0) > pow(hf_base_radius - 0.1, 2.0))
                     {
                         cell_iter->SetCellProliferativeType(p_ds_type);
                     }
                 }
-                
-
             }
             else
             {
-                
-                if (pow(x, 2.0) + pow(y, 2.0) < pow(hf_base_radius - 1.6, 2.0))
+
+                if (pow(x, 2.0) + pow(y, 2.0) < pow(hf_base_radius - 1.5, 2.0))
                 {
                     cell_iter->SetCellProliferativeType(p_transit_type);
                 }
-                if (x > -pow(fabs(y)/hf_base_scale, 0.5)&&(x < pow(fabs(y)/hf_base_scale, 0.5)))
+
+                if (pow(x, 2.0) + pow(y, 2.0) > pow(hf_base_radius - 0.1, 2.0))
+                {
+                    cell_iter->SetCellProliferativeType(p_ds_type);
+                }
+                
+                if (y <= -hf_base_scale * x * x)
                 {
                     cell_iter->SetCellProliferativeType(p_dp_type);
-                }
-                else
-                {
-                    if (pow(x, 2.0) + pow(y, 2.0) > pow(hf_base_radius - 0.1, 2.0))
-                    {
-                        cell_iter->SetCellProliferativeType(p_ds_type);
-                    }
                 }
             }
 
         }
-
 
         // Initialise simulator class
         OffLatticeSimulation<2> simulator(cell_population);
@@ -322,7 +330,7 @@ public:
         p_differentiation_tracking_modifier->SetNicheBulgeCentre(niche_bulge_centre);
         p_differentiation_tracking_modifier->SetNicheBulgeRadius(niche_bulge_radius);
         p_differentiation_tracking_modifier->SetMovableProgenyDifferentiationProbability(movable_progeny_probability);
-        p_differentiation_tracking_modifier->SetTransitDifferentiationHeight(100.0);
+        p_differentiation_tracking_modifier->SetTransitDifferentiationHeight(4.0);
         p_differentiation_tracking_modifier->SetBaseRadius(0.8*hf_base_radius);
 		simulator.AddSimulationModifier(p_differentiation_tracking_modifier);
 
@@ -333,8 +341,7 @@ public:
                                                                         0.9*hf_top_width,
                                                                         niche_bulge_radius,
                                                                         niche_bulge_centre,
-                                                                        max_height,
-                                                                        transit_differentiation_height));
+                                                                        max_height));
         simulator.AddCellPopulationBoundaryCondition(p_bc);
 
         simulator.Solve(); // Run the simulation.

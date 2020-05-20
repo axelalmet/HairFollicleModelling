@@ -87,19 +87,19 @@ void HairFollicleMigrationForce<DIM>::AddForceContribution(AbstractCellPopulatio
         if (p_cell_type->IsType<TransitCellProliferativeType>())
         {
             unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
-            rCellPopulation.GetNode(node_index)->AddAppliedForceContribution(0.5 * migration_force); 
+            rCellPopulation.GetNode(node_index)->AddAppliedForceContribution(migration_force); 
         }
-        else if (p_cell_type->IsType<DifferentiatedCellProliferativeType>())
-        {
-            // Quick hack to kick the diff cells out of the HF base
-            double y = rCellPopulation.GetLocationOfCellCentre(*cell_iter)[1];
+        // else if (p_cell_type->IsType<DifferentiatedCellProliferativeType>())
+        // {
+        //     // Quick hack to kick the diff cells out of the HF base
+        //     double y = rCellPopulation.GetLocationOfCellCentre(*cell_iter)[1];
 
-            if (y < 4.0)
-            {
-                unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
-                rCellPopulation.GetNode(node_index)->AddAppliedForceContribution(-1.0 * migration_force); 
-            }
-        }
+        //     if (y < 4.0)
+        //     {
+        //         unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+        //         rCellPopulation.GetNode(node_index)->AddAppliedForceContribution(-1.0 * migration_force); 
+        //     }
+        // }
     }
 }
 

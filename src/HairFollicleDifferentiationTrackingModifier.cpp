@@ -191,18 +191,19 @@ void HairFollicleDifferentiationTrackingModifier<DIM>::UpdateCellData(AbstractCe
             }
         }
         // Also track the progenies for differentiation
-        else if ( p_cell_type->template IsType<MovableStemCellProgenyProliferativeType>())
+        else if ( (p_cell_type->template IsType<MovableStemCellProgenyProliferativeType>())
+                ||(p_cell_type->template IsType<NonMovableStemCellProgenyProliferativeType>()) )
         {
             // If progeny cells are in the lower half of the base and fall out of the annulus of progeny cells.
-            if (current_location[1] < 0.0)
-            {
-                if (norm_2(current_location) < mBaseRadius - 1.5)
+            // if (current_location[1] < 0.0)
+            // {
+                if (norm_2(current_location) < mBaseRadius - 1.25)
                 {
                     boost::shared_ptr<AbstractCellProperty> p_transit_type =
                     cell_iter->rGetCellPropertyCollection().GetCellPropertyRegistry()->template Get<TransitCellProliferativeType>();
                     cell_iter->SetCellProliferativeType(p_transit_type);
                 }
-            }
+            // }
         }
         else if (p_cell_type->template IsType<TransitCellProliferativeType>() ) // For TA cells, if they've gone past a certain height, let's differentiate them.
         {   

@@ -23,9 +23,9 @@
 
 	<CellCycleModels>
 		<HairFollicleUniformG1GenerationalCellCycleModel>
-			<MaxTransitGenerations>3</MaxTransitGenerations>
-			<StemCellG1Duration>38</StemCellG1Duration>
-			<TransitCellG1Duration>26</TransitCellG1Duration>
+			<MaxTransitGenerations>2</MaxTransitGenerations>
+			<StemCellG1Duration>36</StemCellG1Duration>
+			<TransitCellG1Duration>36</TransitCellG1Duration>
 			<SDuration>5</SDuration>
 			<G2Duration>4</G2Duration>
 			<MDuration>1</MDuration>

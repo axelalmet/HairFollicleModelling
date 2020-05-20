@@ -47,11 +47,6 @@ private:
      */
     double mMaxHeight;
 
-    /*
-     * Height when TA cells differentiate
-     */
-    double mTransitDifferentiationHeight;
-
     /** Needed for serialization. */
     friend class boost::serialization::access;
     /**
@@ -78,7 +73,6 @@ public:
      * @param nicheBulgeRadius size of stem cell niche
      * @param nicheBulgeCentre centre of stem cell niche (assumed to be circular in shape)
      * @param maxHeight maximal height for the non-differentiated HF cells
-     * @param transitDifferentiationHeight height when TA cells differentiate (to separate from diff'd cells)
      */
     HairFollicleGeometryBoundaryCondition(AbstractCellPopulation<DIM>* pCellPopulation,
                            double hairFollicleBaseScale,
@@ -86,8 +80,7 @@ public:
                            double hairFollicleTopWidth, 
                            double nicheBulgeRadius,
                            c_vector<double, DIM> nicheBulgeCentre,
-                           double maxHeight,
-                           double transitDifferentiationHeight);
+                           double maxHeight);
 
     /**
      * @return #mHairFollicleScale.
@@ -118,11 +111,6 @@ public:
      * @return #mMaxHeight
      */
     double rGetMaxHeight() const;
-
-    /**
-     * @return #mTransitDifferentiationHeight
-     */
-    double rGetTransitDifferentiationHeight() const;
 
     /**
      * Overridden ImposeBoundaryCondition() method.
@@ -191,9 +179,6 @@ inline void save_construct_data(
 
     double max_height = t->rGetMaxHeight();
     ar << max_height;
-
-    double transit_height = t->rGetTransitDifferentiationHeight();
-    ar << transit_height;
 }
 
 /**
@@ -229,11 +214,8 @@ inline void load_construct_data(
     double max_height;
     ar >> max_height;
 
-    double transit_height;
-    ar >> transit_height;
-
     // Invoke inplace constructor to initialise instance
-    ::new(t)HairFollicleGeometryBoundaryCondition<DIM>(p_cell_population, base_scale, base_radius, top_width, niche_bulge_radius, niche_bulge_centre, max_height, transit_height);
+    ::new(t)HairFollicleGeometryBoundaryCondition<DIM>(p_cell_population, base_scale, base_radius, top_width, niche_bulge_radius, niche_bulge_centre, max_height);
 }
 }
 } // namespace ...

@@ -20,16 +20,14 @@ HairFollicleGeometryBoundaryCondition<DIM>::HairFollicleGeometryBoundaryConditio
         double hairFollicleTopWidth,
         double nicheBulgeRadius,
         c_vector<double, DIM> nicheBulgeCentre,
-        double maxHeight,
-        double transitDifferentiationHeight)
+        double maxHeight)
 		: AbstractCellPopulationBoundaryCondition<DIM>(pCellPopulation),
 		  mHairFollicleBaseScale(hairFollicleBaseScale),
           mHairFollicleBaseRadius(hairFollicleBaseRadius),
           mHairFollicleTopWidth(hairFollicleTopWidth),
           mNicheBulgeRadius(nicheBulgeRadius),
           mNicheBulgeCentre(nicheBulgeCentre),
-          mMaxHeight(maxHeight),
-          mTransitDifferentiationHeight(transitDifferentiationHeight)
+          mMaxHeight(maxHeight)
 		  {
 		  }
 
@@ -67,12 +65,6 @@ template<unsigned DIM>
 double HairFollicleGeometryBoundaryCondition<DIM>::rGetMaxHeight() const
 {
 	return mMaxHeight;
-}
-
-template<unsigned DIM>
-double HairFollicleGeometryBoundaryCondition<DIM>::rGetTransitDifferentiationHeight() const
-{
-	return mTransitDifferentiationHeight;
 }
 
 template<unsigned DIM>
@@ -162,7 +154,7 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                 c_vector<double, DIM> nearest_point = current_location;
 
                 // If we are above the circle that defines the HF base.
-                if (y >=  pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5) - 0.5)
+                if (y >=  pow(pow(mHairFollicleBaseRadius, 2.0) - pow(mHairFollicleTopWidth, 2.0), 0.5))
                 {
                     // Make sure that the cells are confined within the vertical strip along the HF
                     if (x < 0.0)
@@ -208,28 +200,47 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                         nearest_point[1] = mMaxHeight;
                     }
                 }
-                else // If we are in the HF base
-                {   
-
-                    if ( (x < -sqrt(fabs(y)/mHairFollicleBaseScale))||(x > sqrt(fabs(y)/mHairFollicleBaseScale) ) )
+                else if (y >=  pow(pow(mHairFollicleBaseRadius - 1.25, 2.0) - pow(mHairFollicleTopWidth - 1, 2.0), 0.5))
+                {
+                    // Make sure that the cells are confined within the vertical strip along the HF
+                    if (x < 0.0)
                     {
-
-                        // We allow movable progeny to leave the outer lay to enter the TA region
-                        if (cell_iter->GetCellProliferativeType()->template IsType<NonMovableStemCellProgenyProliferativeType>())
+                        if (x > -mHairFollicleTopWidth + 1.0)
+                        {
+                            nearest_point[0] = -mHairFollicleTopWidth + 1.0;
+                        }
+                        else if (x < -mHairFollicleTopWidth)
                         {
                             if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
                             {
                                 nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
                                 nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
                             }
-                            else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.25, 2.0) )
+                        }
+
+                        if (y > mNicheBulgeCentre[1]) // We need to make sure progeny stay outside of the bulge.
+                        {
+                            if ( y < mNicheBulgeCentre[1] + mNicheBulgeRadius)
                             {
-                                nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
-                                nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                                nearest_point[1] = mNicheBulgeCentre[1] + mNicheBulgeRadius;
                             }
                         }
                         else
                         {
+                            if ( y > mNicheBulgeCentre[1] - mNicheBulgeRadius)
+                            {
+                                nearest_point[1] = mNicheBulgeCentre[1] - mNicheBulgeRadius;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (x < mHairFollicleTopWidth - 1.0)
+                        {
+                            nearest_point[0] = mHairFollicleTopWidth - 1.0;
+                        }
+                        else if (x > mHairFollicleTopWidth)
+                        {
                             if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
                             {
                                 nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
@@ -238,13 +249,55 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                         }
 
                     }
-                    else
+                    if (y > mMaxHeight) // Impose a hard barrier on the progeny (not on diff cells, because we want hair to shoot out)
                     {
-                        if (y < - mHairFollicleBaseScale * x * x)
-                        {
-                            nearest_point[1] = - mHairFollicleBaseScale * x * x;
-                        }
+                        nearest_point[1] = mMaxHeight;
                     }
+                }
+                else if (y >= 0.0) // If we are in the upper half of the HF base
+                {
+                    if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
+                    {
+                        nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
+                        nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                    }
+                    // else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.25, 2.0) )
+                    // {
+                    //     nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                    //     nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                    // }
+                }
+                else // Should be in te lower half of the base
+                {   
+                    // if ( (x < -sqrt(fabs(y)/mHairFollicleBaseScale))||(x > sqrt(fabs(y)/mHairFollicleBaseScale) ) )
+                    // {
+                        if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
+                        {
+                            nearest_point[0] = x * mHairFollicleBaseRadius / norm_2(current_location);
+                            nearest_point[1] = y * mHairFollicleBaseRadius / norm_2(current_location);
+                        }
+                        // else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius - 1.25, 2.0) )
+                        // {
+                        //     nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                        //     nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
+                        // }
+
+                    // }
+
+                    if ( (x < 0.0)&&(x > -sqrt(fabs(y)/mHairFollicleBaseScale)) )
+                    {
+                        nearest_point[0] = -sqrt(fabs(y)/mHairFollicleBaseScale);
+                    }
+                    else if ( (x > 0.0)&&(x < sqrt(fabs(y)/mHairFollicleBaseScale)) )
+                    {
+                        nearest_point[0] = sqrt(fabs(y)/mHairFollicleBaseScale);
+                    }
+                    
+                    // Shouldn't enter the DP region
+                    // if (y < - mHairFollicleBaseScale * x * x)
+                    // {
+                    //     nearest_point[1] = - mHairFollicleBaseScale * x * x;
+                    // }
                 }
 
                 // Set the new location
@@ -276,7 +329,8 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
             {
                 c_vector<double, DIM> nearest_point = current_location;
 
-                if (y >= pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5))
+                // If we're above the circle that defines the HF base.
+                if (y >= pow(pow(mHairFollicleBaseRadius + 0.5 , 2.0) - pow(mHairFollicleTopWidth + 0.5, 2.0), 0.5))
                 {
                     if ( (x < 0.0)&&(y > mNicheBulgeCentre[1] - mNicheBulgeRadius) )
                     {
@@ -305,19 +359,33 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                 else
                 {
 
-                    if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius + 0.5, 2.0))
+                    if (y > 0.0)
                     {
-                        nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
-                        nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius + 0.5, 2.0))
+                        {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        }
+                        else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius + 0.5, 2.0))
+                        {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        }
                     }
-                    else if (pow(x, 2.0) + pow(y, 2.0) <= pow(mHairFollicleBaseRadius, 2.0))
+                    else
                     {
-                        nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
-                        nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
-                    }
 
-                    if (y < 0.0)
-                    {
+                        if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius + 0.5, 2.0))
+                        {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        }
+                        else if (pow(x, 2.0) + pow(y, 2.0) < pow(mHairFollicleBaseRadius + 0.5, 2.0))
+                        {
+                            nearest_point[0] = x * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius + 0.5) / norm_2(current_location);
+                        }
+
                         if ( (x < 0.0)&&(x >= -pow(fabs(y)/mHairFollicleBaseScale, 0.5)) ) 
                         {
                             nearest_point[0] = -pow(fabs(y)/mHairFollicleBaseScale, 0.5);
@@ -337,9 +405,9 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
             {
                 c_vector<double, DIM> nearest_point = current_location;
 
-                if (y >= pow(pow(mHairFollicleBaseRadius + 1.0, 2.0) - pow(mHairFollicleTopWidth + 1.0, 2.0), 0.5))
+                if (y >= pow(pow(mHairFollicleBaseRadius - 1.5, 2.0) - pow(mHairFollicleTopWidth - 1.0, 2.0), 0.5))
                 {
-        
+    
                     if ( (x < 0.0)&&(x < -mHairFollicleTopWidth + 1.0) )
                     {
                         nearest_point[0] = -mHairFollicleTopWidth + 1.0;
@@ -351,20 +419,17 @@ void HairFollicleGeometryBoundaryCondition<DIM>::ImposeBoundaryCondition(const s
                 }
                 // If we are below the HF outer root sheath, within the base, we should make sure the TA/diff cells
                 // don't mix with the stem cell progeny.
-                else if ( (y >= 0.0)&&(y <= pow(pow(mHairFollicleBaseRadius - 1.5, 2.0) - pow(mHairFollicleTopWidth - 1.0, 2.0), 0.5)) )
+                else if (y >= 0.0)
                 {
                     if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius - 1.25, 2.0))
                     {
                             nearest_point[0] = x * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
                             nearest_point[1] = y * (mHairFollicleBaseRadius - 1.25) / norm_2(current_location);
                     }
-
-                    if (cell_iter->GetCellProliferativeType()->template IsType<DifferentiatedCellProliferativeType>())
+                    else if (pow(x, 2.0) + pow(y, 2.0) > pow(mHairFollicleBaseRadius, 2.0))
                     {
-                        if (y < mTransitDifferentiationHeight)
-                        {
-                            nearest_point[1] = mTransitDifferentiationHeight;
-                        }
+                            nearest_point[0] = x * (mHairFollicleBaseRadius) / norm_2(current_location);
+                            nearest_point[1] = y * (mHairFollicleBaseRadius) / norm_2(current_location);
                     }
                 }
                 else // Cells should be in lower half of base
@@ -479,7 +544,6 @@ void HairFollicleGeometryBoundaryCondition<DIM>::OutputCellPopulationBoundaryCon
 	*rParamsFile << mNicheBulgeCentre[DIM - 1] << "</NicheBulgeCentre>\n";
 
     *rParamsFile << "\t\t\t<MaxHeight>" << mMaxHeight << "</MaxHeight>\n";
-    *rParamsFile << "\t\t\t<TransitDifferentiationHeight>" << mTransitDifferentiationHeight << "</TransitDifferentiationHeight>\n";
 
 	// Call method on direct parent class
 	AbstractCellPopulationBoundaryCondition<DIM>::OutputCellPopulationBoundaryConditionParameters(rParamsFile);
