@@ -1,0 +1,15 @@
+Process 0 of 1.
+uname sysname  = Linux
+uname nodename = axel-VirtualBox
+uname release  = 4.15.0-99-generic
+uname version  = #100-Ubuntu SMP Wed Apr 22 20:32:56 UTC 2020
+uname machine  = x86_64
+
+Information on number and type of processors:
+model name	: Intel(R) Core(TM) i5-8257U CPU @ 1.40GHz
+
+Information on processor caches, in the same order as above:
+cache size	: 6144 KB
+
+Information on system memory:
+MemTotal:        4039408 kB

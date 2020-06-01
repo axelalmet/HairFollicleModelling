@@ -1,10 +1,10 @@
-Start testing: May 19 18:35 PDT
+Start testing: May 28 10:39 PDT
 ----------------------------------------------------------
-497/498 Testing: TestHairFollicleModel
-497/498 Test: TestHairFollicleModel
+497/500 Testing: TestHairFollicleModel
+497/500 Test: TestHairFollicleModel
 Command: "/home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel"
 Directory: /media/sf_SimulationPackages/Chaste/
-"TestHairFollicleModel" start time: May 19 18:35 PDT
+"TestHairFollicleModel" start time: May 28 10:39 PDT
 Output:
 ----------------------------------------------------------
 Running 1 test
@@ -13,42 +13,17 @@ Running 1 test
 
 
 Entering TestHairFollicle
-TestHairFollicleModel: /media/sf_SimulationPackages/Chaste/cell_based/src/population/forces/GeneralisedLinearSpringForce.cpp:102: boost::numeric::ublas::c_vector<double, SPACE_DIM> GeneralisedLinearSpringForce<ELEMENT_DIM, SPACE_DIM>::CalculateForceBetweenNodes(unsigned int, unsigned int, AbstractCellPopulation<ELEMENT_DIM, SPACE_DIM>&) [with unsigned int ELEMENT_DIM = 2; unsigned int SPACE_DIM = 2]: Assertion `distance_between_nodes > 0' failed.
-[axel-VirtualBox:21321] *** Process received signal ***
-[axel-VirtualBox:21321] Signal: Aborted (6)
-[axel-VirtualBox:21321] Signal code:  (-6)
-[axel-VirtualBox:21321] [ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x3ef20)[0x7f6cd078ef20]
-[axel-VirtualBox:21321] [ 1] /lib/x86_64-linux-gnu/libc.so.6(gsignal+0xc7)[0x7f6cd078ee97]
-[axel-VirtualBox:21321] [ 2] /lib/x86_64-linux-gnu/libc.so.6(abort+0x141)[0x7f6cd0790801]
-[axel-VirtualBox:21321] [ 3] /lib/x86_64-linux-gnu/libc.so.6(+0x3039a)[0x7f6cd078039a]
-[axel-VirtualBox:21321] [ 4] /lib/x86_64-linux-gnu/libc.so.6(+0x30412)[0x7f6cd0780412]
-[axel-VirtualBox:21321] [ 5] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN28GeneralisedLinearSpringForceILj2ELj2EE26CalculateForceBetweenNodesEjjR22AbstractCellPopulationILj2ELj2EE+0x211)[0x7f6cd950d937]
-[axel-VirtualBox:21321] [ 6] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN31AbstractTwoBodyInteractionForceILj2ELj2EE20AddForceContributionER22AbstractCellPopulationILj2ELj2EE+0x458)[0x7f6cd94711ee]
-[axel-VirtualBox:21321] [ 7] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN23AbstractNumericalMethodILj2ELj2EE29ComputeForcesIncludingDampingEv+0x130)[0x7f6cd97ba622]
-[axel-VirtualBox:21321] [ 8] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN27ForwardEulerNumericalMethodILj2ELj2EE22UpdateAllNodePositionsEd+0x5b)[0x7f6cd97c0873]
-[axel-VirtualBox:21321] [ 9] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN20OffLatticeSimulationILj2ELj2EE30UpdateCellLocationsAndTopologyEv+0x19b)[0x7f6cd965c8cf]
-[axel-VirtualBox:21321] [10] /home/axel/BuildChaste/cell_based/libchaste_cell_based.so(_ZN27AbstractCellBasedSimulationILj2ELj2EE5SolveEv+0xf0e)[0x7f6cd963de1e]
-[axel-VirtualBox:21321] [11] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x20f50)[0x5572bf39ff50]
-[axel-VirtualBox:21321] [12] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x21758)[0x5572bf3a0758]
-[axel-VirtualBox:21321] [13] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1989b)[0x5572bf39889b]
-[axel-VirtualBox:21321] [14] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1c3a5)[0x5572bf39b3a5]
-[axel-VirtualBox:21321] [15] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1c295)[0x5572bf39b295]
-[axel-VirtualBox:21321] [16] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1c145)[0x5572bf39b145]
-[axel-VirtualBox:21321] [17] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1c012)[0x5572bf39b012]
-[axel-VirtualBox:21321] [18] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x1c5d4)[0x5572bf39b5d4]
-[axel-VirtualBox:21321] [19] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x189f5)[0x5572bf3979f5]
-[axel-VirtualBox:21321] [20] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xe7)[0x7f6cd0771b97]
-[axel-VirtualBox:21321] [21] /home/axel/BuildChaste/projects/HairFollicleModelling/test/TestHairFollicleModel(+0x188aa)[0x5572bf3978aa]
-[axel-VirtualBox:21321] *** End of error message ***
+Passed
+OK!
 <end of output>
-Test time = 1505.09 sec
+Test time = 1680.50 sec
 ----------------------------------------------------------
-Test Failed.
-"TestHairFollicleModel" end time: May 19 19:00 PDT
-"TestHairFollicleModel" time elapsed: 00:25:05
+Test Passed.
+"TestHairFollicleModel" end time: May 28 11:07 PDT
+"TestHairFollicleModel" time elapsed: 00:28:00
 ----------------------------------------------------------
 
-End testing: May 19 19:00 PDT
+End testing: May 28 11:07 PDT
 
-Continuous_project_HairFollicleModelling = 1505.09 sec*proc
+Continuous_project_HairFollicleModelling = 1680.50 sec*proc
 

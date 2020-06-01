@@ -14,7 +14,6 @@
 #include "RepulsionForce.hpp" // Repulsion-only force (really only applied to OS models)
 #include "HairFollicleMigrationForce.hpp" // Migration force to keep TA cells in base.
 #include "NoCellCycleModel.hpp" // Cell cycle for fibroblasts that is dependent on exposure to wound-derived growth factors
-#include "UniformCellCycleModel.hpp" // Simple cell cycle model that draws G1 times from uniform distribution
 #include "HairFollicleUniformG1GenerationalCellCycleModel.hpp" // Simple generation-based cell cycle model that draws G1 times from uniform distribution
 #include "NodeBasedCellPopulation.hpp" // Overlapping spheres centre-based population
 #include "OffLatticeSimulation.hpp" //Simulates the evolution of the population
@@ -28,8 +27,11 @@
 #include "DermalSheathCellProliferativeType.hpp" // Fibroblasts to represent the dermal papillae
 #include "CellLabel.hpp" // Add a cell label to tag certain cells
 #include "WildTypeCellMutationState.hpp" // Epidermal mutation state
-#include "HairFollicleDifferentiationTrackingModifier.hpp"
+#include "HairFollicleDifferentiationTrackingModifier.hpp" // Enforce differentiation in the right places
+#include "VolumeTrackingModifier.hpp" // Track the cell volumes, which is needed for contact inhibition.
 #include "HairFollicleGeometryBoundaryCondition.hpp" // Boundary to maintain the geometry of the HF.
+#include "CellAncestorWriter.hpp" // Track cell ancestors
+// #include "VolumeTrackingModifier.hpp" // Track cell volumes for contact inhibition
 #include "FakePetscSetup.hpp" //Forbids tests running in parallel
 #include "PetscSetupAndFinalize.hpp"
 
@@ -38,7 +40,7 @@
 static const std::string M_OUTPUT_DIRECTORY = "HairFollicleModel";
 static const double M_DT = 0.005;
 static const double M_END_TIME = 150.0;
-static const double M_SAMPLING_TIMESTEP = 10.0/M_DT;
+static const double M_SAMPLING_TIMESTEP = 25.0/M_DT;
 
 /*
 * A test model to test a simple fixed hair follicle model in a fixed geometry
@@ -173,10 +175,13 @@ public:
 
         for (unsigned i = 0; i < p_mesh->GetNumNodes(); i++) // Iterator for periodic mesh
         {
-            double birth_time = -20.0 * RandomNumberGenerator::Instance()->ranf();
+            double birth_time = -30.0 * RandomNumberGenerator::Instance()->ranf();
 
-            HairFollicleUniformG1GenerationalCellCycleModel* p_cycle_model = new HairFollicleUniformG1GenerationalCellCycleModel(); //Contact-inhibition-based cycle model yet.
-            p_cycle_model->SetMaxTransitGenerations(3);
+            // Set contact-inhibition-based cell cycle model with fixed-generation-based divisions for TA cells.
+            HairFollicleUniformG1GenerationalCellCycleModel* p_cycle_model = new HairFollicleUniformG1GenerationalCellCycleModel();
+            p_cycle_model->SetEquilibriumVolume(0.25*M_PI);
+            p_cycle_model->SetQuiescentVolumeFraction(0.8);
+            p_cycle_model->SetMaxTransitGenerations(2);
             p_cycle_model->SetStemCellG1Duration(38.0);
             p_cycle_model->SetTransitCellG1Duration(26.0);
             p_cycle_model->SetDimension(2);
@@ -185,6 +190,9 @@ public:
 
             p_cell->SetBirthTime(birth_time);
             p_cell->SetCellProliferativeType(p_nonmovable_type); // Initialise as non-movable progeny
+
+            // Set the volume
+            p_cell->GetCellData()->SetItem("volume", 0.25*M_PI);
             
             cells.push_back(p_cell);
         }
@@ -192,6 +200,12 @@ public:
         //Create cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells); // Used for non-periodic
         cell_population.SetMeinekeDivisionSeparation(division_separation);
+
+        // Mark ancestors
+        cell_population.SetCellAncestorsToLocationIndices();
+
+        // Add cell writers to track clones
+        cell_population.AddCellWriter<CellAncestorWriter>();
 
         // Let's specify the cell types and work out the maximum height for the HF barrier.
         double max_height = -hf_base_radius;
@@ -301,7 +315,7 @@ public:
 
         //Set output directory
         std::stringstream out;
-        out << "/Movable_" << movable_progeny_probability << "/";
+        out << "/Movable_" << movable_progeny_probability << "/TestContactInhibition/";
         std::string output_directory = M_OUTPUT_DIRECTORY + out.str();
         simulator.SetOutputDirectory(output_directory);
         simulator.SetDt(M_DT);
@@ -333,6 +347,10 @@ public:
         p_differentiation_tracking_modifier->SetTransitDifferentiationHeight(4.0);
         p_differentiation_tracking_modifier->SetBaseRadius(0.8*hf_base_radius);
 		simulator.AddSimulationModifier(p_differentiation_tracking_modifier);
+
+        // // Create a modifier to track cell volumes
+        MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
+		simulator.AddSimulationModifier(p_volume_tracking_modifier);
 
         // Add a boundary condition to maintain the hair follicle geometry
         MAKE_PTR_ARGS(HairFollicleGeometryBoundaryCondition<2>, p_bc, (&cell_population, 
